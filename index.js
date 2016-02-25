@@ -36,7 +36,7 @@ validator.setRemoteReference('http://interagent.github.io/interagent-hyper-schem
 module.exports = {
   validate: function validate(data, schemaUri, callback) {
     var schemaPath = getSchemaPath(schemaUri);
-    getSchemaFromUri(schemaUri, (err, schema) => {
+    getSchemaFromUri(schemaUri, function onGetSchema(err, schema) {
       if (err) {
         return callback(err);
       }
@@ -60,9 +60,9 @@ function getSchemaFromUri(schemaUri, callback) {
   var urlParts = url.parse(schemaUri);
   var filename = path.join(__dirname, "/schemas", urlParts.host, urlParts.pathname);
   async.waterfall([
-    (cb) => {
+    function checkCache(cb) {
       // Check that file exists. If not, fetch and cache it
-      fs.stat(filename, (err, stats) => {
+      fs.stat(filename, function onStat(err, stats) {
         if (err && err.code === "ENOENT") {
           cacheSchema(schemaUri, filename, cb);
         } else if (err) {
@@ -73,10 +73,10 @@ function getSchemaFromUri(schemaUri, callback) {
       });
     },
     // Read cached schema, as it should exist if this line is reached
-    (cb) => {
+    function readSchema(cb) {
       readCachedSchema(filename, cb);
     }
-  ], (err, schema) => {
+  ], function onWaterfallComplete(err, schema) {
     return callback(err, schema);
   });
 }
@@ -89,7 +89,7 @@ function getSchemaFromUri(schemaUri, callback) {
  */
 function readCachedSchema(filename, callback) {
   // File exists, read it
-  fs.readFile(filename, (error, data) => {
+  fs.readFile(filename, function onFileRead(error, data) {
     if (error) {
       return callback(error);
     }
@@ -132,30 +132,30 @@ function cacheSchema(schemaUri, filename, callback) {
   var directory = pathParts.dir;
   async.waterfall([
     // Make directory, recursively
-    (cb) => {
+    function makeDir(cb) {
       mkdirp(directory, cb);
     },
     // Fetch schema from URL
-    (createdDir, cb) => {
-      http.get(schemaUri, (response) => {
+    function fetchSchema(createdDir, cb) {
+      http.get(schemaUri, function onGet(response) {
         cb(null, response);
-      }).on('error', (e) => {
+      }).on('error', function onError(e) {
         cb(e);
       });
     },
     // Write/pipe schema to file
-    (response, cb) => {
+    function writeFile(response, cb) {
       var writeStream = fs.createWriteStream(filename);
       response.pipe(writeStream);
-      writeStream.on('finish', () => {
+      writeStream.on('finish', function onWrite() {
         cb(null, writeStream);
       });
     },
     // Close write stream
-    (writeStream, cb) => {
+    function closeFile(writeStream, cb) {
       writeStream.close(cb);
     }
-  ], (err) => {
+  ], function onWaterfallComplete(err) {
     return callback(err);
   });
 }
