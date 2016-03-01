@@ -1,0 +1,71 @@
+{
+  "definitions": {
+    "links": {
+      "required": [
+        "links"
+      ],
+      "properties": {
+        "links": {
+          "type": "array",
+          "items":
+            "$ref": "#/definitions/links/definitions/link"
+        }
+      }
+      "definitions": {
+        "link": {
+          "description": "Hypermedia affordance",
+          "type": [
+            "object"
+          ],
+          "required": [
+            "href",
+            "rel"
+          ],
+          "properties": {
+            "href": {
+              "type": [
+                "string"
+              ]
+            },
+            "rel": {
+              "type": [
+                "string"
+              ]
+            },
+            "method": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "GET",
+                "PUT",
+                "POST",
+                "DELETE",
+                "HEAD",
+                "OPTIONS"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "response": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/links"
+        }
+      ],
+      "required": [
+        "body"
+      ],
+      "properties": {
+        "body": {
+          "type": [
+            "string"
+          ],
+          "pattern": "^.*html.*$"
+        }
+      }
+    }
+  }
+}

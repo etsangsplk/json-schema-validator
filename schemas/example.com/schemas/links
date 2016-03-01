@@ -1,0 +1,53 @@
+{
+  "definitions": {
+    "links": {
+      "required": [
+        "links"
+      ],
+      "properties": {
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/links/definitions/link"
+          }
+        }
+      },
+      "definitions": {
+        "link": {
+          "type": [
+            "object"
+          ],
+          "required": [
+            "href"
+          ],
+          "properties": {
+            "href": {
+              "type": [
+                "string"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "response": {
+      "strictProperties": true,
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "$ref": "#/definitions/links"
+        }
+      ],
+      "required": [
+        "body"
+      ],
+      "properties": {
+        "body": {
+          "type": [
+            "string"
+          ]
+        }
+      }
+    }
+  }
+}
