@@ -8,7 +8,7 @@ var util = require('util');
 var fs = require('fs');
 
 // Require local modules
-var validator = require('..');
+var validator = require(__dirname + '/../index');
 var packageJson = require(__dirname + '/../package');
 
 
