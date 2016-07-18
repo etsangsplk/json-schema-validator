@@ -8,6 +8,7 @@ var url = require('url');
 var mkdirp = require('mkdirp');
 var path = require('path');
 var async = require('async');
+var streamifier = require('streamifier');
 var http = require('http');
 var ZSchema = require('z-schema');
 //var fs = require('fs');
@@ -137,16 +138,33 @@ function cacheSchema(schemaUri, filename, callback) {
     },
     // Fetch schema from URL
     function fetchSchema(createdDir, cb) {
-      http.get(schemaUri, function onGet(response) {
-        cb(null, response);
-      }).on('error', function onError(e) {
-        cb(e);
-      });
+      var urlParts = url.parse(schemaUri);
+      console.log({urlParts});
+      if (urlParts.protocol === "file:") {
+        fs.readFile(path.join(urlParts.host, urlParts.path), function onRead(err, data) {
+          if (err) {
+            cb(err);
+          } else {
+            cb(null, data);
+          }
+        });
+      } else {
+        http.get(schemaUri, function onGet(response) {
+          cb(null, response);
+        }).on('error', function onError(e) {
+          cb(e);
+        });
+      }
     },
     // Write/pipe schema to file
     function writeFile(response, cb) {
       var writeStream = fs.createWriteStream(filename);
-      response.pipe(writeStream);
+      console.log({response});
+      if (Buffer.isBuffer(response)) {
+        streamifier.createReadStream(response).pipe(writeStream);
+      } else {
+        response.pipe(writeStream);
+      }
       writeStream.on('finish', function onWrite() {
         cb(null, writeStream);
       });

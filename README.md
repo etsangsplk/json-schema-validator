@@ -28,6 +28,13 @@ validator.validate(car, 'http://example.com/schemas/main#definitions/car', funct
 });
 ```
 
+```
+npm install -g hypermedia-validator
+
+validate cars.json http://example.com/schemas/main#definitions/car/definitions/cars
+validate cars.json file://schema.json#definitions/car/definitions/cars
+```
+
 
 ## Development
 

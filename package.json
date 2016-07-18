@@ -1,6 +1,6 @@
 {
   "name": "hypermedia-validator",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Validate json data against schemas",
   "main": "index.js",
   "scripts": {
@@ -14,11 +14,16 @@
     "schema",
     "validation"
   ],
+  "bin": {
+    "validate": "./cli/validate.js"
+  },
   "author": "Reese Wilson",
   "license": "MIT",
   "dependencies": {
     "async": "^1.5.2",
+    "commander": "^2.9.0",
     "mkdirp": "^0.5.1",
+    "streamifier": "^0.1.1",
     "z-schema": "^3.16.1"
   },
   "devDependencies": {
