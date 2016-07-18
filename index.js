@@ -30,7 +30,7 @@ util.inherits(SchemaValidationError, Error);
 // Set up the validator
 var options = {};
 var validator = new ZSchema(options);
-var interagentSchema = require('./schemas/interagent.github.io/interagent-hyper-schema');
+var interagentSchema = require(__dirname + '/schemas/interagent.github.io/interagent-hyper-schema');
 validator.setRemoteReference('http://interagent.github.io/interagent-hyper-schema', interagentSchema);
 
 // Public
