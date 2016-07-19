@@ -1,6 +1,6 @@
 {
   "name": "hypermedia-validator",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Validate json data against schemas",
   "main": "index.js",
   "scripts": {
