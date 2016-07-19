@@ -61,7 +61,24 @@ var invalidJson = [
 ];
 
 describe("Schema Validation", function validTests() {
-  it("should detect valid data sets", function validateValid(done) {
+  it("should read schema from file uri and detect valid data sets", function validateValid(done) {
+    var json;
+    var path;
+    var schemaUrl = 'file://schemas/example.com/schemas/main';
+    async.each(validJson, function validate(entry, callback) {
+      json = entry.data;
+      path = entry.path;
+      validator.validate(json, schemaUrl + path, function onValidated(err) {
+        if (err) {
+          console.log(util.inspect(err, false, null));
+        }
+        callback(err);
+      });
+    }, function onAllComplete(err) {
+      done(err);
+    });
+  });
+  it("should read cached schema from http uri and detect valid data sets", function validateValid(done) {
     var json;
     var path;
     var schemaUrl = 'http://example.com/schemas/main';

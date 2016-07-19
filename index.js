@@ -69,13 +69,17 @@ function getSchemaFromUri(schemaUri, callback) {
         } else if (err) {
           cb(err);
         } else {
-          cb();
+          cb(null, null);
         }
       });
     },
     // Read cached schema, as it should exist if this line is reached
-    function readSchema(cb) {
-      readCachedSchema(filename, cb);
+    function readSchema(response, cb) {
+      if (response) {
+        cb(null, JSON.parse(response));
+      } else {
+        readCachedSchema(filename, cb);
+      }
     }
   ], function onWaterfallComplete(err, schema) {
     return callback(err, schema);
@@ -131,49 +135,81 @@ function getSchemaPath(schemaUri) {
 function cacheSchema(schemaUri, filename, callback) {
   var pathParts = path.parse(filename);
   var directory = pathParts.dir;
-  async.waterfall([
-    // Make directory, recursively
-    function makeDir(cb) {
-      mkdirp(directory, cb);
-    },
-    // Fetch schema from URL
-    function fetchSchema(createdDir, cb) {
-      var urlParts = url.parse(schemaUri);
-      console.log({urlParts});
-      if (urlParts.protocol === "file:") {
-        fs.readFile(path.join(urlParts.host, urlParts.path), function onRead(err, data) {
-          if (err) {
-            cb(err);
-          } else {
-            cb(null, data);
-          }
-        });
+  var schemaData;
+  var isFile;
+
+  // Fetch schema from file or http uri
+  var urlParts = url.parse(schemaUri);
+  if (urlParts.protocol === "file:") {
+    // Already a local file, read it, no need to cache
+    var filePath = path.join(urlParts.host, urlParts.path);
+    fs.readFile(filePath, function onRead(err, data) {
+      if (err) {
+        callback(err);
       } else {
-        http.get(schemaUri, function onGet(response) {
-          cb(null, response);
-        }).on('error', function onError(e) {
-          cb(e);
-        });
+        schemaData = data.toString();
+        callback(null, schemaData);
       }
-    },
-    // Write/pipe schema to file
-    function writeFile(response, cb) {
-      var writeStream = fs.createWriteStream(filename);
-      console.log({response});
-      if (Buffer.isBuffer(response)) {
-        streamifier.createReadStream(response).pipe(writeStream);
-      } else {
-        response.pipe(writeStream);
-      }
-      writeStream.on('finish', function onWrite() {
-        cb(null, writeStream);
+    });
+  } else {
+    // Get from http and cache to file
+    http.get(schemaUri, function onGet(response) {
+      var data = '';
+      response.on('data', function onData(d) {
+        data += d;
       });
-    },
-    // Close write stream
-    function closeFile(writeStream, cb) {
-      writeStream.close(cb);
-    }
-  ], function onWaterfallComplete(err) {
-    return callback(err);
-  });
+      response.on('end', function onEnd(d) {
+        schemaData = data;
+        writeCache();
+      });
+    }).on('error', function onError(e) {
+      return callback(e);
+    });
+  }
+
+  function writeCache() {
+    async.waterfall([
+      // Fetch schema from URL
+      // Make directory, recursively
+      function makeDir(cb) {
+        mkdirp(directory, cb);
+      },
+      // Write/pipe schema to file
+      function writeFile(createdDir, cb) {
+        var writeStream;
+        var skipClose = false;
+        if (isFile) {
+          cb(null, null);
+        } else {
+          writeStream = fs.createWriteStream(filename);
+          streamifier.createReadStream(schemaData).pipe(writeStream);
+          writeStream.on('error', function onWriteError(err) {
+            skipClose = true;
+            cb(err);
+          });
+          writeStream.on('finish', function onWrite(a, b) {
+            if (skipClose === false) {
+              cb(null, writeStream);
+            }
+          });
+        }
+      },
+      // Close write stream
+      function closeFile(writeStream, cb) {
+        if (writeStream) {
+          writeStream.close(function onCloseStream(err) {
+            cb(err);
+          });
+        } else {
+          cb(null);
+        }
+      }
+    ], function onWaterfallComplete(err) {
+      if (err && schemaData !== undefined) {
+        // We weren't able to cache it, but schema was read, so, success, kind of
+        return callback(null, schemaData);
+      }
+      return callback(err, schemaData);
+    });
+  }
 }

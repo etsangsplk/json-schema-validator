@@ -4,6 +4,7 @@ Requires node >= 0.12
 
 Use [prmd](https://github.com/interagent/prmd)  or [schema-generator](https://hub.docker.com/r/shinydocker/schema-generator/) to generate JSON schemas (this package works for JSON schemas in general, not just for prmd's hypermedia schemas). Validation is done with the [z-schema library](https://github.com/zaggino/z-schema)
 
+Schemas fetched from http uri's are cached to file if node has write permission to the `schemas` directory
 
 ## Usage
 
@@ -28,12 +29,15 @@ validator.validate(car, 'http://example.com/schemas/main#definitions/car', funct
 });
 ```
 
+### CLI
 ```
 npm install -g hypermedia-validator
-
-validate cars.json http://example.com/schemas/main#definitions/car/definitions/cars
 validate cars.json file://schema.json#definitions/car/definitions/cars
+
+// Or
+validate cars.json http://example.com/schemas/main#definitions/car/definitions/cars
 ```
+
 
 
 ## Development
